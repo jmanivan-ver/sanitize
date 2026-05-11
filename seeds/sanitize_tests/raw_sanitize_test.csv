@@ -1,0 +1,2 @@
+id,col_trim,col_normalize_whitespace,col_strip_special,col_upper,col_lower,col_title,col_nullif_empty,col_nullif_zero,col_nullif_negative,col_round_2,col_round_4,col_abs,col_date_floor,col_nullif_future,col_nullif_ancient,col_normalize_phone
+1,"  hello  ","hello   world","hello@world!",hello,HELLO,hello world,"",0,-5,3.14159,3.14159,-42,2024-01-15,2099-12-31,1850-06-15,(555) 123-4567
