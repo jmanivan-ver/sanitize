@@ -1,0 +1,34 @@
+version: 2
+
+seeds:
+  - name: raw_sanitize_test
+    config:
+      column_types:
+        id: bigint
+        col_trim: string
+        col_normalize_whitespace: string
+        col_strip_special: string
+        col_upper: string
+        col_lower: string
+        col_title: string
+        col_nullif_empty: string
+        col_nullif_zero: bigint
+        col_nullif_negative: bigint
+        col_round_2: double
+        col_round_4: double
+        col_abs: bigint
+        col_date_floor: date
+        col_nullif_future: date
+        col_nullif_ancient: date
+        col_normalize_phone: string
+
+  - name: raw_sanitize_stacked_test
+    config:
+      column_types:
+        id: bigint
+        col_priority_str: string
+        col_priority_chain: string
+        col_regex_chain: string
+        col_case_2_numeric: bigint
+        col_case_2_date: date
+        col_case_3_date: date
