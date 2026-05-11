@@ -1,0 +1,2 @@
+id,col_priority_str,col_priority_chain,col_regex_chain,col_case_2_numeric,col_case_2_date,col_case_3_date
+1,"  hello  ","  hello  ","  hello@world!  ",1,2024-01-15,2024-01-15
