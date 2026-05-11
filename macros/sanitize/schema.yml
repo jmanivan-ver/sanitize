@@ -1,0 +1,120 @@
+version: 2
+
+macros:
+  - name: sanitize_columns
+    description: >
+      Main entry point for tag-based column sanitization.
+      Generates a SELECT statement with sanitization expressions applied to
+      each column according to its `sanitize:*` tags.
+
+      Tags are read from `model.columns` in `schema.yml` when no explicit
+      config is provided. Pass `columns_config` directly when schema.yml
+      introspection is unavailable (e.g. dbt unit tests, scripted pipelines).
+
+      SQL is optimized automatically: multiple CASE expressions are merged
+      into one, and compatible regex patterns are batched.
+    arguments:
+      - name: source_relation
+        type: string
+        description: >
+          Name of the CTE or table to SELECT from. Must exist in the
+          surrounding SQL context (e.g. a CTE defined earlier in the model).
+      - name: columns_config
+        type: dict
+        description: >
+          Optional. Explicit mapping of column name to list of sanitize tags.
+          Example: `{'first_name': ['sanitize:trim', 'sanitize:title'], 'id': []}`.
+          When omitted, tags are read from `model.columns` via schema.yml.
+
+  - name: apply_sanitize_tag
+    description: >
+      Routes a single `sanitize:*` tag to its SQL expression for the current
+      adapter. Override this macro in your project to handle custom tags while
+      falling back to the built-in implementation for standard tags.
+
+      Adapter-specific behaviour is handled via `adapter.dispatch`:
+        - `sanitize:normalize_whitespace` — regex pattern differs per adapter
+        - `sanitize:nullif_future` — `CURRENT_DATE` vs `CURRENT_DATE()`
+    arguments:
+      - name: column_expr
+        type: string
+        description: >
+          SQL expression or column name to transform.
+          May itself be a nested expression when tags are stacked.
+      - name: tag
+        type: string
+        description: >
+          A valid sanitize tag from the registry (e.g. `sanitize:trim`).
+          Raises a compiler error if the tag is not recognised.
+
+  - name: get_tag_registry
+    description: >
+      Returns the complete tag registry as a dict keyed by tag name.
+      Each entry contains: `priority` (int), `type` (simple/regex/case),
+      `combinable` (bool), and `description` (str).
+    arguments: []
+
+  - name: is_valid_tag
+    description: >
+      Returns `true` if the given tag exists in the registry, `false` otherwise.
+    arguments:
+      - name: tag
+        type: string
+        description: Tag name to validate (e.g. `sanitize:trim`).
+
+  - name: get_tag_metadata
+    description: >
+      Returns the registry metadata dict for a specific tag.
+      Raises a compiler error if the tag is not found.
+      Fields: `priority`, `type`, `combinable`, `description`.
+    arguments:
+      - name: tag
+        type: string
+        description: A valid tag name.
+
+  - name: get_sanitization_rules
+    description: >
+      Resolves the column → sanitize tags mapping for a model.
+      When `columns_config` is provided, uses it directly.
+      Otherwise reads `sanitize:*` tags from `model.columns` (populated
+      from schema.yml config). Validates all tags against the registry.
+    arguments:
+      - name: model_name
+        type: string
+        description: Name of the model (used in error messages only).
+      - name: columns_config
+        type: dict
+        description: >
+          Optional explicit column config. When omitted, falls back to
+          schema.yml introspection via `model.columns`.
+
+  - name: reorder_tags
+    description: >
+      Sorts a list of sanitize tags by their registry priority so that
+      operations execute in the correct semantic order regardless of the
+      order they were declared in schema.yml.
+
+      Example: `['sanitize:upper', 'sanitize:trim']` → `['sanitize:trim', 'sanitize:upper']`
+      (trim at priority 1 runs before upper at priority 3).
+    arguments:
+      - name: tags
+        type: list
+        description: List of sanitize tag strings to reorder.
+
+  - name: optimize_sql
+    description: >
+      Generates optimized SQL for a column by merging compatible operations.
+      Groups tags by type (simple, regex, case) and applies optimizations:
+        - Multiple CASE expressions merged into a single CASE with multiple WHEN clauses
+        - Regex patterns batched where possible
+        - Simple function calls nested in priority order
+
+      Set `var('sanitize_enable_optimization', false)` to disable and use
+      naive nesting for debugging.
+    arguments:
+      - name: column_name
+        type: string
+        description: The source column name (base expression before transformations).
+      - name: tags
+        type: list
+        description: Pre-ordered list of sanitize tags (output of `reorder_tags`).
