@@ -1,0 +1,540 @@
+version: 2
+
+unit_tests:
+
+  # ── Core tag behaviour: all 16 tags ─────────────────────────────────────────
+
+  - name: test_sanitize_trim
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "  hello  ", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_trim: "hello"}
+
+  - name: test_sanitize_trim_no_change_when_no_whitespace
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_trim: "hello"}
+
+  - name: test_sanitize_normalize_whitespace
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello   world", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_normalize_whitespace: "hello world"}
+
+  - name: test_sanitize_strip_special
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello@world!", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_strip_special: "helloworld"}
+
+  - name: test_sanitize_strip_special_keeps_spaces
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello world!", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_strip_special: "hello world"}
+
+  - name: test_sanitize_upper
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_upper: "HELLO"}
+
+  - name: test_sanitize_lower
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "HELLO", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_lower: "hello"}
+
+  - name: test_sanitize_title
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello world", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_title: "Hello World"}
+
+  - name: test_sanitize_nullif_empty
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_empty: null}
+
+  - name: test_sanitize_nullif_empty_no_change_when_not_empty
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "hello", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_empty: "hello"}
+
+  - name: test_sanitize_nullif_zero
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 0, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_zero: null}
+
+  - name: test_sanitize_nullif_negative
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: -5, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_negative: null}
+
+  - name: test_sanitize_nullif_negative_no_change_for_positive
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 5, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_negative: 5}
+
+  - name: test_sanitize_round_2
+    model: stg_sanitize_test
+    overrides:
+      macros:
+        type_double: double
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: "3.14159", col_round_4: "1.0", col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_round_2: "3.14"}
+
+  - name: test_sanitize_round_4
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: "1.0", col_round_4: "3.14159", col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_round_4: "3.1416"}
+
+  - name: test_sanitize_abs
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: -42, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_abs: 42}
+
+  - name: test_sanitize_abs_no_change_for_positive
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 42, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_abs: 42}
+
+  - name: test_sanitize_date_floor
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15 14:30:00", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_date_floor: "2024-01-15"}
+
+  - name: test_sanitize_nullif_future
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2099-12-31", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_future: null}
+
+  - name: test_sanitize_nullif_future_no_change_for_past
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2020-01-01", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_future: "2020-01-01"}
+
+  - name: test_sanitize_nullif_ancient
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "1850-06-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_ancient: null}
+
+  - name: test_sanitize_nullif_ancient_no_change_for_modern
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "1950-01-01", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_ancient: "1950-01-01"}
+
+  - name: test_sanitize_normalize_phone
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "(555) 123-4567"}
+    expect:
+      rows:
+        - {col_normalize_phone: "5551234567"}
+
+  - name: test_sanitize_normalize_phone_dots
+    model: stg_sanitize_test
+    description: Dots and dashes in phone number are stripped, leaving only digits.
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "555.123.4567"}
+    expect:
+      rows:
+        - {col_normalize_phone: "5551234567"}
+
+  # ── NULL input passthrough ────────────────────────────────────────────────
+
+  - name: test_sanitize_trim_null_passthrough
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: null, col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_trim: null}
+
+  - name: test_sanitize_upper_null_passthrough
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: null, col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_upper: null}
+
+  - name: test_sanitize_nullif_empty_null_input_stays_null
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: null, col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_empty: null}
+
+  - name: test_sanitize_nullif_zero_null_input_stays_null
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: null, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_zero: null}
+
+  - name: test_sanitize_nullif_negative_null_input_stays_null
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: null, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_negative: null}
+
+  - name: test_sanitize_nullif_future_null_input_stays_null
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: null, col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_future: null}
+
+  - name: test_sanitize_nullif_ancient_null_input_stays_null
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: null, col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_nullif_ancient: null}
+
+  - name: test_sanitize_normalize_phone_null_passthrough
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: null}
+    expect:
+      rows:
+        - {col_normalize_phone: null}
+
+  # ── Unicode inputs ────────────────────────────────────────────────────────
+
+  - name: test_sanitize_trim_unicode
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "  café  ", col_normalize_whitespace: "hello", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_trim: "café"}
+
+  - name: test_sanitize_normalize_whitespace_unicode
+    model: stg_sanitize_test
+    given:
+      - input: ref('raw_sanitize_test')
+        rows:
+          - {id: 1, col_trim: "hello", col_normalize_whitespace: "héllo   wörld", col_strip_special: "hello", col_upper: "hello", col_lower: "hello", col_title: "hello", col_nullif_empty: "x", col_nullif_zero: 1, col_nullif_negative: 1, col_round_2: 1, col_round_4: 1, col_abs: 1, col_date_floor: "2024-01-15", col_nullif_future: "2024-01-15", col_nullif_ancient: "2024-01-15", col_normalize_phone: "1234567890"}
+    expect:
+      rows:
+        - {col_normalize_whitespace: "héllo wörld"}
+
+  # ── Optimization: priority reordering ────────────────────────────────────
+  # Tags on stg_sanitize_stacked_test are declared in WRONG priority order.
+  # Correct output proves reorder_tags() sorted them before SQL was generated.
+
+  - name: test_priority_reorder_trim_before_nullif_empty
+    model: stg_sanitize_stacked_test
+    description: >
+      Tags declared in wrong order (nullif_empty=4, trim=1).
+      Input "  " (spaces only): if trim runs first → "" → nullif_empty → NULL (correct).
+      If wrong order: nullif_empty sees "  " (not empty) → passes → trim → "" (NOT null).
+      NULL result proves reorder_tags() ran trim before nullif_empty.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "  ", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_priority_str: null}
+
+  - name: test_priority_reorder_trim_before_nullif_empty_non_empty_passthrough
+    model: stg_sanitize_stacked_test
+    description: Non-empty trimmed value passes through nullif_empty unchanged.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "  hello  ", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_priority_str: "hello"}
+
+  - name: test_priority_reorder_full_chain_trim_upper_nullif_empty
+    model: stg_sanitize_stacked_test
+    description: >
+      Tags declared in wrong order (nullif_empty=4, upper=3, trim=1).
+      Input "  hello  " → trim → "hello" → upper → "HELLO" → nullif_empty → "HELLO".
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "  hello  ", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_priority_chain: "HELLO"}
+
+  - name: test_priority_reorder_full_chain_spaces_only_becomes_null
+    model: stg_sanitize_stacked_test
+    description: Input "  " for the full chain (trim→upper→nullif_empty) → NULL.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "  ", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_priority_chain: null}
+
+  # ── Optimization: regex + simple nesting order ────────────────────────────
+
+  - name: test_regex_chain_trim_then_strip_special_then_upper
+    model: stg_sanitize_stacked_test
+    description: >
+      Tags declared in wrong order (upper=3, strip_special=2, trim=1).
+      Input "  hello@world!  " → trim → "hello@world!" → strip_special → "helloworld" → upper → "HELLOWORLD".
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "  hello@world!  ", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_regex_chain: "HELLOWORLD"}
+
+  - name: test_regex_chain_clean_input_passthrough
+    model: stg_sanitize_stacked_test
+    description: Clean input passes through all three tags unchanged (modulo case).
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello world", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_regex_chain: "HELLO WORLD"}
+
+  # ── Optimization: 2-way CASE merge (numeric) ─────────────────────────────
+
+  - name: test_case_merge_2_numeric_negative_becomes_null
+    model: stg_sanitize_stacked_test
+    description: nullif_negative fires — proves merge included the negative WHEN clause.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: -5, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_case_2_numeric: null}
+
+  - name: test_case_merge_2_numeric_zero_becomes_null
+    model: stg_sanitize_stacked_test
+    description: nullif_zero fires — proves merge included the zero WHEN clause.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 0, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_case_2_numeric: null}
+
+  - name: test_case_merge_2_numeric_positive_passthrough
+    model: stg_sanitize_stacked_test
+    description: Positive non-zero value passes through both CASE conditions unchanged.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 5, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_case_2_numeric: 5}
+
+  # ── Optimization: 2-way CASE merge (date) ────────────────────────────────
+
+  - name: test_case_merge_2_date_ancient_becomes_null
+    model: stg_sanitize_stacked_test
+    description: nullif_ancient fires — proves merge included the ancient WHEN clause.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "1850-01-01", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_case_2_date: null}
+
+  - name: test_case_merge_2_date_future_becomes_null
+    model: stg_sanitize_stacked_test
+    description: nullif_future fires — proves merge included the future WHEN clause.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "2099-12-31", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_case_2_date: null}
+
+  - name: test_case_merge_2_date_valid_passthrough
+    model: stg_sanitize_stacked_test
+    description: Valid past date passes through both merged CASE conditions.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_case_2_date: "2024-01-15"}
+
+  # ── Optimization: 3-tag — 2 CASE + 1 simple (date_floor) ─────────────────
+
+  - name: test_case_3_ancient_becomes_null
+    model: stg_sanitize_stacked_test
+    description: nullif_ancient fires in 3-tag merged expression.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "1850-01-01"}
+    expect:
+      rows:
+        - {col_case_3_date: null}
+
+  - name: test_case_3_future_becomes_null
+    model: stg_sanitize_stacked_test
+    description: nullif_future fires in 3-tag merged expression.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "2099-12-31"}
+    expect:
+      rows:
+        - {col_case_3_date: null}
+
+  - name: test_case_3_valid_date_is_floored
+    model: stg_sanitize_stacked_test
+    description: >
+      Valid date passes the merged CASE and then date_floor is applied as the outer simple transform.
+      Proves CASE tags run inner and date_floor (also priority 6 but simple) wraps outer.
+    given:
+      - input: ref('raw_sanitize_stacked_test')
+        rows:
+          - {id: 1, col_priority_str: "hello", col_priority_chain: "hello", col_regex_chain: "hello", col_case_2_numeric: 1, col_case_2_date: "2024-01-15", col_case_3_date: "2024-01-15"}
+    expect:
+      rows:
+        - {col_case_3_date: "2024-01-15"}
