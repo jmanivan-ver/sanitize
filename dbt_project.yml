@@ -27,7 +27,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 dispatch:
   - macro_namespace: sanitize
     search_order: ['dataplatform']
-    
+
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 
@@ -57,5 +57,5 @@ seeds:
   dataplatform:
     sanitize_tests:
       +tags: ['sanitize_test']
-      +schema: sanitize_tests
+      +schema: tests
       +catalog: "{{ env_var('DBT_CATALOG', 'dev_bronze') }}"
